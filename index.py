@@ -1,60 +1,52 @@
-
-Ronit Teli <ronitteli1@gmail.com>
-8:45 AM (2 minutes ago)
-to me, Sahil
-
 import RPi.GPIO as GPIO
 import time
 
-# Motor pins (BCM numbering)
+# Motor pins
 MOTOR_PIN1 = 17 # Clockwise
 MOTOR_PIN2 = 27 # Anti-clockwise
 
 # Setup
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
-
 GPIO.setup(MOTOR_PIN1, GPIO.OUT)
 GPIO.setup(MOTOR_PIN2, GPIO.OUT)
 
-# Initial stop
-GPIO.output(MOTOR_PIN1, GPIO.LOW)
-GPIO.output(MOTOR_PIN2, GPIO.LOW)
-
-
-def clockwise(duration=2):
+# Functions
+def clockwise(duration=1.5):
     print(">>> CLOCKWISE")
     GPIO.output(MOTOR_PIN1, GPIO.HIGH)
     GPIO.output(MOTOR_PIN2, GPIO.LOW)
     time.sleep(duration)
-    stop()
 
-
-def anticlockwise(duration=2):
+def anticlockwise(duration=1.5):
     print(">>> ANTI-CLOCKWISE")
     GPIO.output(MOTOR_PIN1, GPIO.LOW)
     GPIO.output(MOTOR_PIN2, GPIO.HIGH)
     time.sleep(duration)
-    stop()
 
-
-def stop():
+def stop(duration=1):
     print(">>> STOP")
     GPIO.output(MOTOR_PIN1, GPIO.LOW)
     GPIO.output(MOTOR_PIN2, GPIO.LOW)
+    time.sleep(duration)
 
-
-# Test loop
+# Demo sequence
 try:
-    while True:
-        clockwise(3)
-        time.sleep(1)
+    print("DC Motor Demo Starting...")
+    
+    for i in range(3):
+        clockwise(1.5)
+        stop(0.5)
+        anticlockwise(1.5)
+        stop(1)
 
-        anticlockwise(3)
-        time.sleep(1)
+    print("Demo complete!")
 
 except KeyboardInterrupt:
-    print("Program stopped")
+    print("\nStopped by user")
 
-finally:
+finally: # must be lowercase
+    GPIO.output(MOTOR_PIN1, GPIO.LOW)
+    GPIO.output(MOTOR_PIN2, GPIO.LOW)
     GPIO.cleanup()
+    print("GPIO cleaned up")
