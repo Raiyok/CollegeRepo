@@ -1,52 +1,62 @@
-import RPi.GPIO as GPIO
 import time
+import picamera
+import RPi.GPIO as GPIO
 
 # Motor pins
-MOTOR_PIN1 = 17 # Clockwise
-MOTOR_PIN2 = 27 # Anti-clockwise
+m11 = 17
+m12 = 27
 
-# Setup
+# Button pin
+button = 19
+
+# GPIO setup
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(MOTOR_PIN1, GPIO.OUT)
-GPIO.setup(MOTOR_PIN2, GPIO.OUT)
 
-# Functions
-def clockwise(duration=1.5):
-    print(">>> CLOCKWISE")
-    GPIO.output(MOTOR_PIN1, GPIO.HIGH)
-    GPIO.output(MOTOR_PIN2, GPIO.LOW)
-    time.sleep(duration)
+GPIO.setup(m11, GPIO.OUT)
+GPIO.setup(m12, GPIO.OUT)
+GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-def anticlockwise(duration=1.5):
-    print(">>> ANTI-CLOCKWISE")
-    GPIO.output(MOTOR_PIN1, GPIO.LOW)
-    GPIO.output(MOTOR_PIN2, GPIO.HIGH)
-    time.sleep(duration)
+GPIO.output(m11, GPIO.LOW)
+GPIO.output(m12, GPIO.LOW)
 
-def stop(duration=1):
-    print(">>> STOP")
-    GPIO.output(MOTOR_PIN1, GPIO.LOW)
-    GPIO.output(MOTOR_PIN2, GPIO.LOW)
-    time.sleep(duration)
+# Create camera object
+camera = picamera.PiCamera()
 
-# Demo sequence
+def capture_image():
+    print("Capturing image...")
+    camera.resolution = (1280, 720)
+    camera.start_preview()
+    time.sleep(2) # Allow camera to warm up
+    camera.capture("/home/pi/image.jpg")
+    camera.stop_preview()
+    print("Image saved!")
+
 try:
-    print("DC Motor Demo Starting...")
-    
-    for i in range(3):
-        clockwise(1.5)
-        stop(0.5)
-        anticlockwise(1.5)
-        stop(1)
+    print("Press button to capture image & run motor")
 
-    print("Demo complete!")
+    while True:
+        if GPIO.input(button) == GPIO.LOW: # Button pressed
+            print("Button Pressed!")
+
+            # Motor ON
+            GPIO.output(m11, GPIO.HIGH)
+            GPIO.output(m12, GPIO.LOW)
+
+            capture_image()
+
+            time.sleep(2)
+
+            # Motor OFF
+            GPIO.output(m11, GPIO.LOW)
+            GPIO.output(m12, GPIO.LOW)
+
+            time.sleep(1)
 
 except KeyboardInterrupt:
-    print("\nStopped by user")
+    print("Stopped by user")
 
-finally: # must be lowercase
-    GPIO.output(MOTOR_PIN1, GPIO.LOW)
-    GPIO.output(MOTOR_PIN2, GPIO.LOW)
+finally:
     GPIO.cleanup()
-    print("GPIO cleaned up")
+    camera.close()
+    print("GPIO Cleaned")
